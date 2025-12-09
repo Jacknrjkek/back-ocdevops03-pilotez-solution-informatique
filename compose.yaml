@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Nom du service dans le réseau Docker. C'est ce nom que Spring Boot utilisera dans l'URL.
+  postgres_db:
+    image: 'postgres:16-alpine' # Utilise une image PostgreSQL légère et récente
+    container_name: datashare_postgres
+    environment:
+      # Ces variables sont cruciales et doivent correspondre à ce que Spring Boot attend.
+      # Elles sont chargées depuis un éventuel fichier .env
+      - 'POSTGRES_DB=${DB_NAME}'
+      - 'POSTGRES_USER=${DB_USER}'
+      - 'POSTGRES_PASSWORD=${DB_PASSWORD}'
+
+    ports:
+      # Mappe le port interne 5432 (PostgreSQL) au port externe 5432 de votre machine
+      - '5432:5432'
+
+    volumes:
+      # Ceci garantit que les données ne sont pas perdues lorsque vous arrêtez le container
+      - pg_data:/var/lib/postgresql/data
+
+    restart: always # Redémarre toujours le container en cas d'arrêt
+
+volumes:
+  pg_data:
