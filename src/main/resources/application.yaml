@@ -20,4 +20,4 @@ datashare:
   app:
     jwtSecret: ${JWT_SECRET}
     jwtExpirationMs: 86400000
-    uploadDir: uploads.Driver
+    uploadDir: uploads
