@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
@@ -43,29 +42,42 @@ public class FileController {
     ShareRepository shareRepository;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
+            @RequestParam(value = "expirationTime", required = false) Integer expirationTime) {
+        System.out.println("FileController: uploadFile called. File: " + file.getOriginalFilename() + ", Expiration: "
+                + expirationTime);
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             AppUser user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("FileController: User found: " + user.getEmail());
 
             String fileName = fileStorageService.store(file);
+            System.out.println("FileController: File stored: " + fileName);
 
             File fileEntity = new File();
             fileEntity.setOriginalName(file.getOriginalFilename());
             fileEntity.setStoragePath(fileName);
             fileEntity.setSize(file.getSize());
             fileEntity.setOwner(user);
-            fileEntity.setExpirationDate(LocalDateTime.now().plusDays(30)); // Default 30 days as per user update
+
+            // Expiration logic: Default 7 days, User request capped at 7 days
+            int days = (expirationTime != null) ? Math.min(expirationTime, 7) : 7;
+            if (days < 1)
+                days = 1; // Minimum 1 day
+
+            fileEntity.setExpirationDate(LocalDateTime.now().plusDays(days));
 
             fileRepository.save(fileEntity);
+            System.out.println("FileController: File entity saved. ID: " + fileEntity.getId());
 
             // Create default share
             Share share = new Share();
             share.setFile(fileEntity);
             share.setUniqueToken(UUID.randomUUID().toString());
             shareRepository.save(share);
+            System.out.println("FileController: Share created. Token: " + share.getUniqueToken());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "fileId", fileEntity.getId(),
@@ -73,6 +85,8 @@ public class FileController {
                     "message", "File uploaded successfully"));
 
         } catch (Exception e) {
+            System.out.println("FileController: Error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new MessageResponse(
                     "Could not upload the file: " + file.getOriginalFilename() + ". Error: " + e.getMessage()));
         }
@@ -86,6 +100,8 @@ public class FileController {
         AppUser user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
 
         List<File> files = fileRepository.findByOwnerId(user.getId());
+        System.out.println("FileController: getListFiles called for user " + user.getEmail() + ". Found " + files.size()
+                + " files.");
 
         List<FileResponse> fileResponses = files.stream().map(dbFile -> {
             String token = shareRepository.findByFileId(dbFile.getId())
@@ -117,7 +133,9 @@ public class FileController {
 
             fileStorageService.delete(file.getStoragePath());
             fileRepository.delete(file);
-            return ResponseEntity.noContent().build();
+            fileStorageService.delete(file.getStoragePath());
+            fileRepository.delete(file);
+            return ResponseEntity.ok(Map.of("message", "Fichier supprimé avec succès"));
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
