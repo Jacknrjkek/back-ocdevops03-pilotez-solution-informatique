@@ -9,4 +9,6 @@ public interface FileRepository extends JpaRepository<File, Long> {
     Optional<File> findByStoragePath(String storagePath);
 
     List<File> findByOwnerId(Long ownerId);
+
+    List<File> findByExpirationDateBefore(java.time.LocalDateTime date);
 }

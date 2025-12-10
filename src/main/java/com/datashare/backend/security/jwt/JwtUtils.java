@@ -35,8 +35,7 @@ public class JwtUtils {
     }
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret)); // Ensure key is strong enough or generated
-                                                                      // properly
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     // For simplicity in MVP, assuming the secret is a base64 encoded string
