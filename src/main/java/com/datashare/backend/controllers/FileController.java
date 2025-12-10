@@ -120,6 +120,11 @@ public class FileController {
         return ResponseEntity.ok(fileResponses);
     }
 
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<?> deleteFilePost(@PathVariable Long id) {
+        return deleteFile(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFile(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

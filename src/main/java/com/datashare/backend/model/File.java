@@ -30,6 +30,9 @@ public class File {
     @JoinColumn(name = "owner_id")
     private AppUser owner;
 
+    @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Share> shares = new java.util.ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -91,5 +94,13 @@ public class File {
 
     public void setOwner(AppUser owner) {
         this.owner = owner;
+    }
+
+    public java.util.List<Share> getShares() {
+        return shares;
+    }
+
+    public void setShares(java.util.List<Share> shares) {
+        this.shares = shares;
     }
 }
