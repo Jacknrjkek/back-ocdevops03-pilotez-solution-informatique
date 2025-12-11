@@ -31,10 +31,13 @@ public class ShareController {
                     if (file.getExpirationDate() != null && file.getExpirationDate().isBefore(LocalDateTime.now())) {
                         return ResponseEntity.status(410).body(Map.of("message", "Link expired"));
                     }
-                    return ResponseEntity.ok(Map.of(
-                            "fileName", file.getOriginalName(),
-                            "size", file.getSize(), // Size is now in Entity
-                            "expiration", file.getExpirationDate()));
+                    java.util.Map<String, Object> response = new java.util.HashMap<>();
+                    response.put("fileName", file.getOriginalName());
+                    response.put("size", file.getSize());
+                    response.put("expiration",
+                            file.getExpirationDate() != null ? file.getExpirationDate().toString() : null);
+
+                    return ResponseEntity.ok(response);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

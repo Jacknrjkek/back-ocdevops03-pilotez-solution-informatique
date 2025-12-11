@@ -42,3 +42,4 @@ target/
 # Sécurité : NE JAMAIS COMMITER LES SECRETS DE LA BASE DE DONNÉES !
 .env
 
+uploads/

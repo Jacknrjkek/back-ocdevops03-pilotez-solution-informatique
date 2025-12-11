@@ -44,17 +44,13 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "expirationTime", required = false) Integer expirationTime) {
-        System.out.println("FileController: uploadFile called. File: " + file.getOriginalFilename() + ", Expiration: "
-                + expirationTime);
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             AppUser user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            System.out.println("FileController: User found: " + user.getEmail());
 
             String fileName = fileStorageService.store(file);
-            System.out.println("FileController: File stored: " + fileName);
 
             File fileEntity = new File();
             fileEntity.setOriginalName(file.getOriginalFilename());
@@ -70,25 +66,23 @@ public class FileController {
             fileEntity.setExpirationDate(LocalDateTime.now().plusDays(days));
 
             fileRepository.save(fileEntity);
-            System.out.println("FileController: File entity saved. ID: " + fileEntity.getId());
 
             // Create default share
             Share share = new Share();
             share.setFile(fileEntity);
             share.setUniqueToken(UUID.randomUUID().toString());
             shareRepository.save(share);
-            System.out.println("FileController: Share created. Token: " + share.getUniqueToken());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "fileId", fileEntity.getId(),
                     "shareToken", share.getUniqueToken(),
-                    "message", "File uploaded successfully"));
+                    "message", "Fichier téléversé avec succès"));
 
         } catch (Exception e) {
-            System.out.println("FileController: Error: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new MessageResponse(
-                    "Could not upload the file: " + file.getOriginalFilename() + ". Error: " + e.getMessage()));
+                    "Impossible de téléverser le fichier : " + file.getOriginalFilename() + ". Erreur : "
+                            + e.getMessage()));
         }
     }
 

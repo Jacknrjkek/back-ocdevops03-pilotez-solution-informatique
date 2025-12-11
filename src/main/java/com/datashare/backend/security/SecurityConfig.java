@@ -51,22 +51,31 @@ public class SecurityConfig {
     }
 
     @Bean
+    @org.springframework.core.annotation.Order(1)
+    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/share/**", "/api/download/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        return http.build();
+    }
+
+    @Bean
+    @org.springframework.core.annotation.Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults()) // Enable CORS
+                .cors(Customizer.withDefaults())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll() // For future test controller
-                        .requestMatchers("/api/share/**").permitAll() // Public share metadata
-                        .requestMatchers("/api/download/**").permitAll() // Public download
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow
-                                                                                                         // pre-flight
-                                                                                                         // checks
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**", "/api/test/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
-
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
