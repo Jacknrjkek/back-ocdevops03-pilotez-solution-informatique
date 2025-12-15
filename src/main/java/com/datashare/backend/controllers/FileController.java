@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-// import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -149,8 +148,6 @@ public class FileController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            fileStorageService.delete(file.getStoragePath());
-            fileRepository.delete(file);
             fileStorageService.delete(file.getStoragePath());
             fileRepository.delete(file);
             return ResponseEntity.ok(Map.of("message", "Fichier supprimé avec succès"));
