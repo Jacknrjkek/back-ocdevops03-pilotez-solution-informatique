@@ -16,6 +16,11 @@ spring:
       max-file-size: 1GB
       max-request-size: 1GB
 
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
 datashare:
   app:
     jwtSecret: ${JWT_SECRET}
