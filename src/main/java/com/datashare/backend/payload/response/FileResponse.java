@@ -9,15 +9,17 @@ public class FileResponse {
     private LocalDateTime uploadDate; // Added for US05
     private LocalDateTime expirationDate;
     private String shareToken; // The unique token for the first share link
+    private Integer downloadCount; // Added for download count feature
 
     public FileResponse(Long id, String originalName, Long size, LocalDateTime uploadDate, LocalDateTime expirationDate,
-            String shareToken) {
+            String shareToken, Integer downloadCount) {
         this.id = id;
         this.originalName = originalName;
         this.size = size;
         this.uploadDate = uploadDate;
         this.expirationDate = expirationDate;
         this.shareToken = shareToken;
+        this.downloadCount = downloadCount;
     }
 
     // Getters and Setters
@@ -67,5 +69,13 @@ public class FileResponse {
 
     public void setShareToken(String shareToken) {
         this.shareToken = shareToken;
+    }
+
+    public Integer getDownloadCount() {
+        return downloadCount;
+    }
+
+    public void setDownloadCount(Integer downloadCount) {
+        this.downloadCount = downloadCount;
     }
 }

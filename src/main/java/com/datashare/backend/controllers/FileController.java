@@ -41,9 +41,27 @@ public class FileController {
     @Autowired
     ShareRepository shareRepository;
 
+    private static final java.util.List<String> FORBIDDEN_EXTENSIONS = java.util.Arrays.asList(
+            "exe", "msi", "bat", "cmd", "ps1", "vbs", "js", "jar", "com", "scr", "dll", "sys");
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "expirationTime", required = false) Integer expirationTime) {
+
+        // Extension Check
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            String extension = "";
+            int i = originalFilename.lastIndexOf('.');
+            if (i > 0) {
+                extension = originalFilename.substring(i + 1).toLowerCase();
+            }
+            if (FORBIDDEN_EXTENSIONS.contains(extension)) {
+                return ResponseEntity.badRequest().body(new MessageResponse(
+                        "Extension non supportée : ." + extension));
+            }
+        }
+
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -98,9 +116,9 @@ public class FileController {
                 + " files.");
 
         List<FileResponse> fileResponses = files.stream().map(dbFile -> {
-            String token = shareRepository.findByFileId(dbFile.getId())
-                    .map(Share::getUniqueToken)
-                    .orElse(null);
+            Share share = shareRepository.findByFileId(dbFile.getId()).orElse(null);
+            String token = (share != null) ? share.getUniqueToken() : null;
+            Integer downloadCount = (share != null) ? share.getDownloadCount() : 0;
 
             return new FileResponse(
                     dbFile.getId(),
@@ -108,7 +126,8 @@ public class FileController {
                     dbFile.getSize(),
                     dbFile.getCreatedAt(),
                     dbFile.getExpirationDate(),
-                    token);
+                    token,
+                    downloadCount);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(fileResponses);
