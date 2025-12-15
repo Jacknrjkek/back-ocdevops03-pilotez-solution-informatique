@@ -1,5 +1,9 @@
 package com.datashare.backend.payload.request;
 
+/**
+ * DTO (Data Transfer Object) pour la requête de connexion.
+ * Reçoit l'email et le mot de passe du client.
+ */
 public class LoginRequest {
     private String email;
     private String password;

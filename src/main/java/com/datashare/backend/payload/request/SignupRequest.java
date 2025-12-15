@@ -4,7 +4,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO pour la requête d'inscription.
+ * Inclut les annotations de Validation (Bean Validation)
+ * pour garantir l'intégrité des données reçues.
+ */
 public class SignupRequest {
+
     @NotBlank
     @Size(max = 50)
     @Email

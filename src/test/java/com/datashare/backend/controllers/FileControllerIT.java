@@ -35,6 +35,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Tests d'intégration pour FileController.
+ * Vérifie l'upload et la récupération de fichiers avec MockMvc.
+ */
 @ExtendWith(MockitoExtension.class)
 public class FileControllerIT {
 
@@ -75,6 +79,7 @@ public class FileControllerIT {
         mockUser.setEmail("test@test.com");
     }
 
+    // Helper pour mocker le contexte de sécurité
     private void mockAuthentication() {
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -83,6 +88,10 @@ public class FileControllerIT {
         lenient().when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(mockUser));
     }
 
+    /**
+     * Teste l'upload d'un fichier avec succès.
+     * Vérifie la création en base (Repository) et la génération du ShareToken.
+     */
     @Test
     public void testUploadFile_Success() throws Exception {
         mockAuthentication();
@@ -95,6 +104,7 @@ public class FileControllerIT {
             return f;
         });
 
+        // Appel POST multipart
         mockMvc.perform(multipart("/api/files/upload").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Fichier téléversé avec succès"))
@@ -104,6 +114,9 @@ public class FileControllerIT {
         verify(shareRepository, times(1)).save(any(Share.class));
     }
 
+    /**
+     * Teste la récupération de la liste des fichiers utilisateur.
+     */
     @Test
     public void testGetListFiles_Success() throws Exception {
         mockAuthentication();

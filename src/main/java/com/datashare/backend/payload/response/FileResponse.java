@@ -2,14 +2,18 @@ package com.datashare.backend.payload.response;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO retournant les détails d'un fichier au client frontend.
+ * Contient les métadonnées utiles (Expirations, Token de partage, Stats).
+ */
 public class FileResponse {
     private Long id;
     private String originalName;
-    private Long size; // Added for US05
-    private LocalDateTime uploadDate; // Added for US05
+    private Long size;
+    private LocalDateTime uploadDate;
     private LocalDateTime expirationDate;
-    private String shareToken; // The unique token for the first share link
-    private Integer downloadCount; // Added for download count feature
+    private String shareToken; // Token unique pour le lien de partage
+    private Integer downloadCount;
 
     public FileResponse(Long id, String originalName, Long size, LocalDateTime uploadDate, LocalDateTime expirationDate,
             String shareToken, Integer downloadCount) {

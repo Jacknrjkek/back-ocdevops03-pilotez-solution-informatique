@@ -1,8 +1,11 @@
 package com.datashare.backend.security;
 
+// === Imports Application ===
 import com.datashare.backend.security.jwt.AuthEntryPointJwt;
 import com.datashare.backend.security.jwt.AuthTokenFilter;
 import com.datashare.backend.security.services.UserDetailsServiceImpl;
+
+// === Imports Spring Security ===
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +21,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuration centrale de la sécurité de l'application (Spring Security).
+ *
+ * - Désactive CSRF (inutile pour API REST Stateless)
+ * - Configure la gestion de session en mode STATELESS (JWT obligatoire)
+ * - Définit les règles d'accès aux URLs (PermitAll vs Authenticated)
+ * - Intègre le filtre JWT avant l'authentification standard
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -26,6 +37,7 @@ public class SecurityConfig {
     private final AuthEntryPointJwt unauthorizedHandler;
     private final AuthTokenFilter authTokenFilter;
 
+    // Injection par constructeur (Bonne pratique)
     public SecurityConfig(UserDetailsServiceImpl userDetailsService, AuthEntryPointJwt unauthorizedHandler,
             AuthTokenFilter authTokenFilter) {
         this.userDetailsService = userDetailsService;
@@ -33,6 +45,11 @@ public class SecurityConfig {
         this.authTokenFilter = authTokenFilter;
     }
 
+    /**
+     * Provider d'authentification responsable de vérifier l'identité.
+     * Utilise UserDetailsService pour charger l'utilisateur et PasswordEncoder pour
+     * vérifier le MDP.
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
@@ -40,16 +57,27 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Interface principale pour initier l'authentification.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Encodeur de mot de passe utilisant l'algorithme BCrypt (Robuste).
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Chaîne de sécurité spécifique pour les accés PUBLICS (Téléchargement de
+     * fichiers partagés).
+     * Aucune authentification requise.
+     */
     @Bean
     @org.springframework.core.annotation.Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
@@ -63,6 +91,10 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Chaîne de sécurité par défaut pour l'API Protégée.
+     * Tout accès nécessite un JWT valide.
+     */
     @Bean
     @org.springframework.core.annotation.Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -71,11 +103,17 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Autoriser Login et Register sans Token
                         .requestMatchers("/api/auth/**", "/api/test/**").permitAll()
+                        // Autoriser les requêtes OPTIONS (Pre-flight CORS)
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        // Tout le reste nécessite Authentification
                         .anyRequest().authenticated());
 
+        // Configure le provider d'auth
         http.authenticationProvider(authenticationProvider());
+
+        // Ajoute le filtre JWT avant le filtre UsernamePassword
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,5 +1,8 @@
 package com.datashare.backend.payload.response;
 
+/**
+ * DTO simple pour retourner des messages textuels (Succès, Erreur).
+ */
 public class MessageResponse {
     private String message;
 

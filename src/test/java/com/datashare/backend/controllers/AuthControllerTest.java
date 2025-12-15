@@ -29,6 +29,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Tests Unitaires pour AuthController.
+ * Vérifie la logique métier isolée (Validation, Appels Repository).
+ */
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerTest {
 
@@ -47,6 +51,9 @@ public class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
+    /**
+     * Vérifie que l'inscription échoue si l'email existe déjà.
+     */
     @Test
     public void testRegisterUser_EmailExists() {
         SignupRequest request = new SignupRequest();
@@ -62,6 +69,9 @@ public class AuthControllerTest {
         assertEquals("Error: Email is already in use!", body.getMessage());
     }
 
+    /**
+     * Vérifie le succès d'une inscription standard.
+     */
     @Test
     public void testRegisterUser_Success() {
         SignupRequest request = new SignupRequest();
@@ -80,6 +90,9 @@ public class AuthControllerTest {
         assertEquals("User registered successfully!", body.getMessage());
     }
 
+    /**
+     * Vérifie le succès d'une authentification standard et la génération du JWT.
+     */
     @Test
     public void testAuthenticateUser_Success() {
         LoginRequest loginRequest = new LoginRequest();

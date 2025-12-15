@@ -13,6 +13,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+/**
+ * Tests Unitaires pour JwtUtils.
+ * Vérifie la génération, l'extraction de données et la validation des JWT.
+ */
 @ExtendWith(MockitoExtension.class)
 public class JwtUtilsTest {
 
@@ -30,10 +34,14 @@ public class JwtUtilsTest {
 
     @BeforeEach
     void setUp() {
+        // Injection des propriétés via ReflectionTestUtils
         ReflectionTestUtils.setField(jwtUtils, "jwtSecret", jwtSecret);
         ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", jwtExpirationMs);
     }
 
+    /**
+     * Vérifie la génération d'un token valide.
+     */
     @Test
     void generateJwtToken_Success() {
         when(authentication.getPrincipal()).thenReturn(userDetails);
@@ -45,6 +53,9 @@ public class JwtUtilsTest {
         assertTrue(token.length() > 0);
     }
 
+    /**
+     * Vérifie l'extraction correcte du nom d'utilisateur depuis le token.
+     */
     @Test
     void getUserNameFromJwtToken_Success() {
         when(authentication.getPrincipal()).thenReturn(userDetails);
@@ -56,6 +67,9 @@ public class JwtUtilsTest {
         assertEquals("testuser", username);
     }
 
+    /**
+     * Valide un token correct.
+     */
     @Test
     void validateJwtToken_Valid() {
         when(authentication.getPrincipal()).thenReturn(userDetails);
@@ -76,10 +90,9 @@ public class JwtUtilsTest {
         assertFalse(jwtUtils.validateJwtToken(""));
     }
 
-    // Testing expiration is harder without modifying the system clock or the Utils
-    // class,
-    // but we can test that it expires by generating a token with very short
-    // expiration.
+    /**
+     * Vérifie qu'un token expiré est bien rejeté.
+     */
     @Test
     void validateJwtToken_Expired() throws InterruptedException {
         ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", 1); // 1ms expiration

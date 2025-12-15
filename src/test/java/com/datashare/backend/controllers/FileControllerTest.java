@@ -2,14 +2,10 @@ package com.datashare.backend.controllers;
 
 import com.datashare.backend.model.AppUser;
 import com.datashare.backend.model.File;
-import com.datashare.backend.model.Share;
 import com.datashare.backend.repository.AppUserRepository;
 import com.datashare.backend.repository.FileRepository;
 import com.datashare.backend.repository.ShareRepository;
 import com.datashare.backend.services.FileStorageService;
-import com.datashare.backend.security.jwt.AuthTokenFilter;
-import com.datashare.backend.security.jwt.AuthEntryPointJwt;
-import com.datashare.backend.security.services.UserDetailsServiceImpl;
 import com.datashare.backend.payload.response.MessageResponse;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,11 +30,14 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
+/**
+ * Tests Unitaires pour FileController.
+ * Vérifie la logique métier : Validation extensions, Gestion des droits
+ * (Delete).
+ */
 @ExtendWith(MockitoExtension.class)
 public class FileControllerTest {
 
@@ -71,6 +70,9 @@ public class FileControllerTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
+    /**
+     * Vérifie le refus des fichiers potentiellement malveillants (.exe).
+     */
     @Test
     public void testUploadFileWithForbiddenExtension() {
         MockMultipartFile file = new MockMultipartFile(
@@ -86,6 +88,9 @@ public class FileControllerTest {
         assertEquals("Extension non supportée : .exe", body.getMessage());
     }
 
+    /**
+     * Teste l'upload standard d'un PDF.
+     */
     @Test
     public void testUploadFileSuccess() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
@@ -121,6 +126,9 @@ public class FileControllerTest {
         assertEquals("Fichier téléversé avec succès", body.get("message"));
     }
 
+    /**
+     * Teste la récupération de la liste des fichiers.
+     */
     @Test
     public void testGetListFiles() {
         AppUser mockUser = new AppUser();
@@ -149,6 +157,9 @@ public class FileControllerTest {
         assertEquals("file1.txt", response.getBody().get(0).getOriginalName());
     }
 
+    /**
+     * Teste suppression valide (Propriétaire = Demandeur).
+     */
     @Test
     public void testDeleteFile_Success() {
         AppUser mockUser = new AppUser();
@@ -171,6 +182,9 @@ public class FileControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
+    /**
+     * Teste suppression interdite (Propriétaire != Demandeur).
+     */
     @Test
     public void testDeleteFile_Forbidden() {
         AppUser owner = new AppUser();

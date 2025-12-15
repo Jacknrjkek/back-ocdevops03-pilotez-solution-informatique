@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * Point d'entrée pour gérer les erreurs d'authentification (401).
+ * Déclenché lorsqu'un utilisateur non authentifié tente d'accéder à une
+ * ressource protégée.
+ */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
@@ -19,6 +24,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
+        // Log l'erreur et retourne une réponse 401 Unauthorized simple
         logger.error("Unauthorized error: {}", authException.getMessage());
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
     }

@@ -14,6 +14,10 @@ import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests Unitaires pour FileStorageService.
+ * Vérifie le stockage physique des fichiers sur le disque.
+ */
 public class FileStorageServiceTest {
 
     private FileStorageService fileStorageService;
@@ -23,20 +27,24 @@ public class FileStorageServiceTest {
     public void setUp() throws Exception {
         fileStorageService = new FileStorageService();
 
-        // Inject uploadDir using Reflection
+        // Injection du répertoire de test via Reflection
         Field uploadDirField = FileStorageService.class.getDeclaredField("uploadDir");
         uploadDirField.setAccessible(true);
         uploadDirField.set(fileStorageService, TEST_UPLOAD_DIR);
 
-        // Manually trigger init
+        // Initialisation manuelle
         fileStorageService.init();
     }
 
     @AfterEach
     public void tearDown() throws IOException {
+        // Nettoyage après chaque test
         FileSystemUtils.deleteRecursively(Paths.get(TEST_UPLOAD_DIR));
     }
 
+    /**
+     * Vérifie qu'un fichier valide est bien écrit sur le disque.
+     */
     @Test
     public void testStoreFile() {
         MockMultipartFile file = new MockMultipartFile(
@@ -54,6 +62,9 @@ public class FileStorageServiceTest {
         assertTrue(Files.exists(path));
     }
 
+    /**
+     * Vérifie que le stockage d'un fichier vide lève une exception.
+     */
     @Test
     public void testStoreEmptyFile_ThrowsException() {
         MockMultipartFile file = new MockMultipartFile(

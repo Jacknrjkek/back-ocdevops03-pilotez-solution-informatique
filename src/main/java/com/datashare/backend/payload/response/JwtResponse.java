@@ -1,11 +1,15 @@
 package com.datashare.backend.payload.response;
 
+/**
+ * DTO contenant le token JWT généré et les infos utilisateur.
+ * Renvoyé après une connexion réussie.
+ */
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
     private Long id;
     private String email;
-    private String username; // Keeping username for compatibility, though we use email
+    private String username;
 
     public JwtResponse(String accessToken, Long id, String email) {
         this.token = accessToken;

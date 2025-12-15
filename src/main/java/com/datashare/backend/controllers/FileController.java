@@ -1,5 +1,6 @@
 package com.datashare.backend.controllers;
 
+// === Imports métier ===
 import com.datashare.backend.model.AppUser;
 import com.datashare.backend.model.File;
 import com.datashare.backend.model.Share;
@@ -9,6 +10,8 @@ import com.datashare.backend.repository.AppUserRepository;
 import com.datashare.backend.repository.FileRepository;
 import com.datashare.backend.repository.ShareRepository;
 import com.datashare.backend.services.FileStorageService;
+
+// === Imports Spring ===
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,36 +21,64 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+// === Utilitaires ===
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Controller responsable de la gestion des fichiers utilisateurs.
+ *
+ * - Upload de fichiers (avec vérification d'extension)
+ * - Listing des fichiers de l'utilisateur connecté
+ * - Suppression (physique et logique)
+ */
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
 
+    /**
+     * Service de stockage physique (disque dur).
+     */
     @Autowired
     FileStorageService fileStorageService;
 
+    /**
+     * Repository pour les métadonnées des fichiers.
+     */
     @Autowired
     FileRepository fileRepository;
 
+    /**
+     * Repository pour récupérer l'utilisateur connecté.
+     */
     @Autowired
     AppUserRepository userRepository;
 
+    /**
+     * Repository pour gérer les liens de partage associés.
+     */
     @Autowired
     ShareRepository shareRepository;
 
+    // Liste des extensions interdites pour des raisons de sécurité
     private static final java.util.List<String> FORBIDDEN_EXTENSIONS = java.util.Arrays.asList(
             "exe", "msi", "bat", "cmd", "ps1", "vbs", "js", "jar", "com", "scr", "dll", "sys");
 
+    /**
+     * Endpoint d'upload de fichier.
+     *
+     * @param file           le fichier binaire reçu (Multipart)
+     * @param expirationTime durée de validité optionnelle en jours
+     * @return statut de l'opération et token de partage généré
+     */
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "expirationTime", required = false) Integer expirationTime) {
 
-        // Extension Check
+        // 1. Vérifie l'extension du fichier (Sécurité)
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null) {
             String extension = "";
@@ -62,34 +93,37 @@ public class FileController {
         }
 
         try {
+            // 2. Récupère l'utilisateur connecté via le contexte de sécurité
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             AppUser user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            // 3. Stocke physiquement le fichier
             String fileName = fileStorageService.store(file);
 
+            // 4. Crée l'entrée en base de données
             File fileEntity = new File();
             fileEntity.setOriginalName(file.getOriginalFilename());
             fileEntity.setStoragePath(fileName);
             fileEntity.setSize(file.getSize());
             fileEntity.setOwner(user);
 
-            // Expiration logic: Default 7 days, User request capped at 7 days
+            // 5. Calcule la date d'expiration (Max 7 jours)
             int days = (expirationTime != null) ? Math.min(expirationTime, 7) : 7;
             if (days < 1)
-                days = 1; // Minimum 1 day
-
+                days = 1; // Minimum 1 jour
             fileEntity.setExpirationDate(LocalDateTime.now().plusDays(days));
 
             fileRepository.save(fileEntity);
 
-            // Create default share
+            // 6. Crée automatiquement un lien de partage
             Share share = new Share();
             share.setFile(fileEntity);
             share.setUniqueToken(UUID.randomUUID().toString());
             shareRepository.save(share);
 
+            // 7. Retourne la réponse succès avec les IDs
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "fileId", fileEntity.getId(),
                     "shareToken", share.getUniqueToken(),
@@ -103,17 +137,24 @@ public class FileController {
         }
     }
 
+    /**
+     * Endpoint de listing des fichiers.
+     *
+     * @return liste des fichiers appartenant à l'utilisateur connecté
+     */
     @GetMapping
     public ResponseEntity<List<FileResponse>> getListFiles() {
+        // Récupère l'utilisateur courant
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal(); // Assuming auth filter ensures principal
-                                                                               // is UserDetails
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         AppUser user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
 
+        // Récupère les fichiers en base
         List<File> files = fileRepository.findByOwnerId(user.getId());
         System.out.println("FileController: getListFiles called for user " + user.getEmail() + ". Found " + files.size()
                 + " files.");
 
+        // Transforme les entités JPA en DTOs (FileResponse)
         List<FileResponse> fileResponses = files.stream().map(dbFile -> {
             Share share = shareRepository.findByFileId(dbFile.getId()).orElse(null);
             String token = (share != null) ? share.getUniqueToken() : null;
@@ -132,13 +173,23 @@ public class FileController {
         return ResponseEntity.ok(fileResponses);
     }
 
+    /**
+     * Endpoint de suppression (via POST, legacy).
+     */
     @PostMapping("/delete/{id}")
     public ResponseEntity<?> deleteFilePost(@PathVariable Long id) {
         return deleteFile(id);
     }
 
+    /**
+     * Endpoint de suppression de fichier.
+     *
+     * @param id ID du fichier à supprimer
+     * @return statut de l'opération
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFile(@PathVariable Long id) {
+        // Vérification de sécurité : l'utilisateur est-il propriétaire ?
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         AppUser user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
@@ -148,8 +199,12 @@ public class FileController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
+            // Suppression du fichier physique
             fileStorageService.delete(file.getStoragePath());
+
+            // Suppression des métadonnées en base
             fileRepository.delete(file);
+
             return ResponseEntity.ok(Map.of("message", "Fichier supprimé avec succès"));
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }

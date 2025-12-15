@@ -3,6 +3,12 @@ package com.datashare.backend.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entité JPA représentant un fichier téléversé.
+ *
+ * Contient les métadonnées du fichier (nom, chemin, taille)
+ * et gère la relation avec le propriétaire et les partages.
+ */
 @Entity
 @Table(name = "file")
 public class File {
@@ -14,6 +20,7 @@ public class File {
     @Column(name = "original_name")
     private String originalName;
 
+    // Chemin relatif/interne sur le disque
     @Column(name = "storage_path", unique = true)
     private String storagePath;
 
@@ -23,13 +30,17 @@ public class File {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // Date de suppression logique/physique prévue
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;
 
+    // Relation Many-to-One : Un fichier appartient à un seul utilisateur
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private AppUser owner;
 
+    // Relation One-to-Many : Un fichier peut avoir plusieurs liens de partages (si
+    // étendu)
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<Share> shares = new java.util.ArrayList<>();
 

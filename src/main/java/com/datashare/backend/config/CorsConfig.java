@@ -9,6 +9,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Configuration CORS (Cross-Origin Resource Sharing).
+ * Autorise le frontend (localhost:4200) à communiquer avec cette API.
+ */
 @Configuration
 public class CorsConfig {
 
@@ -17,18 +21,19 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow specific origin (frontend)
+        // Origines autorisées (Frontend Angular)
         config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
 
-        // Allow all headers (Authorization, etc.)
+        // Headers autorisés (Auth, Content-Type...)
         config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
 
-        // Allow all methods
+        // Méthodes HTTP autorisées
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Allow credentials
+        // Autoriser l'envoi de cookies/credentials si nécessaire
         config.setAllowCredentials(true);
 
+        // Appliquer la config à toutes les routes
         source.registerCorsConfiguration("/**", config);
         return source;
     }

@@ -3,6 +3,12 @@ package com.datashare.backend.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entité JPA représentant un utilisateur de l'application.
+ *
+ * Stocke les informations de connexion (email, hash mot de passe)
+ * et les métadonnées de compte.
+ */
 @Entity
 @Table(name = "app_user")
 public class AppUser {
@@ -11,15 +17,18 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Email unique servant d'identifiant de connexion
     @Column(nullable = false, unique = true)
     private String email;
 
+    // Mot de passe crypté (Jamais en clair !)
     @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // Hook JPA pour initialiser la date de création avant insertion
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

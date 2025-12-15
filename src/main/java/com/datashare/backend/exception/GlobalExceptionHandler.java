@@ -12,9 +12,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestionnaire global des exceptions (ControllerAdvice).
+ *
+ * Intercepte les exceptions levées par les contrôleurs pour retourner
+ * des réponses JSON uniformisées, notamment pour les erreurs de validation.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Gère les erreurs de validation des DTOs (@Valid).
+     * Retourne une map champ -> erreur.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, Object> response = new HashMap<>();

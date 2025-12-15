@@ -30,6 +30,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Tests d'intégration pour AuthController.
+ * Utilise MockMvc pour simuler des appels HTTP et vérifier les réponses.
+ */
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerIT {
 
@@ -54,19 +58,26 @@ public class AuthControllerIT {
 
     @BeforeEach
     public void setup() {
+        // Initialisation de MockMvc avec le contrôleur injecté
         mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
     }
 
+    /**
+     * Teste le scénario nominal d'inscription réussie.
+     * Vérifie le code de retour 201 (Created) et le message de succès.
+     */
     @Test
     public void testRegisterUser_Success() throws Exception {
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setEmail("newuser@test.com");
         signupRequest.setPassword("password123");
 
+        // Simulation des dépendances
         when(userRepository.existsByEmail("newuser@test.com")).thenReturn(false);
         when(encoder.encode("password123")).thenReturn("encodedPassword");
         when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        // Exécution de la requête POST et vérification
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(signupRequest)))
@@ -74,6 +85,10 @@ public class AuthControllerIT {
                 .andExpect(jsonPath("$.message").value("User registered successfully!"));
     }
 
+    /**
+     * Teste le scénario nominal de connexion réussie.
+     * Vérifie le code 200 (OK) et la présence du Token JWT.
+     */
     @Test
     public void testLoginUser_Success() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
@@ -97,6 +112,7 @@ public class AuthControllerIT {
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(mockUser));
         when(jwtUtils.generateJwtToken(authentication)).thenReturn("fake-jwt-token");
 
+        // Exécution de la requête POST et vérification
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))

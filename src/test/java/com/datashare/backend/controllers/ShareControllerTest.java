@@ -10,22 +10,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests Unitaires pour ShareController.
+ * Gère l'accès public (non authentifié) aux fichiers via Token.
+ */
 @ExtendWith(MockitoExtension.class)
 public class ShareControllerTest {
 
@@ -38,6 +37,9 @@ public class ShareControllerTest {
     @InjectMocks
     private ShareController shareController;
 
+    /**
+     * Récupération des métadonnées (Nom, Taille) avec un token valide.
+     */
     @Test
     void getShareMetadata_Success() {
         String token = "valid-token";
@@ -52,6 +54,7 @@ public class ShareControllerTest {
         ResponseEntity<?> response = shareController.getShareMetadata(token);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertEquals("test.txt", body.get("fileName"));
         assertEquals(123L, body.get("size"));
@@ -67,6 +70,9 @@ public class ShareControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
+    /**
+     * Vérifie le code 410 (Gone) si le fichier associé est expiré.
+     */
     @Test
     void getShareMetadata_Expired() {
         String token = "expired-token";
@@ -82,6 +88,9 @@ public class ShareControllerTest {
         assertEquals(HttpStatus.GONE, response.getStatusCode()); // 410 Gone
     }
 
+    /**
+     * Téléchargement réussi : Doit incrémenter le compteur de téléchargements.
+     */
     @Test
     void downloadFile_Success() throws MalformedURLException {
         String token = "valid-token";

@@ -2,6 +2,11 @@ package com.datashare.backend.model;
 
 import jakarta.persistence.*;
 
+/**
+ * Entité JPA représentant un token de partage.
+ *
+ * Permet l'accès externe à un fichier via un identifiant unique (UUID).
+ */
 @Entity
 @Table(name = "share")
 public class Share {
@@ -10,12 +15,15 @@ public class Share {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Token publique (UUID) utilisé dans les URLs
     @Column(name = "unique_token", unique = true, nullable = false)
     private String uniqueToken;
 
+    // Compteur de téléchargements
     @Column(name = "download_count")
     private Integer downloadCount = 0;
 
+    // Fichier associé
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id")
     private File file;
