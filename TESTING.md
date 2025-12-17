@@ -62,9 +62,6 @@ Réalisés avec **Cypress**, ils valident les parcours critiques :
 ![File Flow Cypress](screenshots/file-flow.png)
 *Test Success: File Flow*
 
-![Page de Connexion](screenshots/login.png)
-*Page de Connexion vérifiée par les tests E2E*
-
 ![Page de Création de Compte](screenshots/register.png)
 *Page de Création de Compte vérifiée par les tests E2E*
 
