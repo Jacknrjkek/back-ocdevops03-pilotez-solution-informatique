@@ -17,7 +17,7 @@ DataShare est une application web sécurisée de partage de fichiers, développ�
 *   **[User Stories](./US.md)** : Liste des fonctionnalités et matrice de traçabilité (Tests/Code).
 *   **[Maintenance](./MAINTENANCE.md)** : Procédures de surveillance, backup et gestion des logs.
 *   **[Performance](./PERF.md)** : Audit de performance et plan de montée en charge.
-*   **[Pense-Bête](./PENSE_BETE.md)** : Commandes utiles et mémo technique.
+*   **[Commandes](./COMMANDES.md)** : Commandes utiles et mémo technique.
 *   **[Maquettes Figma](https://www.figma.com/design/XEinfkoE7mXktCCfMs3E8c/DataShare?node-id=0-1&p=f&t=7FcjTcbcCYzlWxON-0)** : Design System et maquettes UI de l'application.
 
 ---
