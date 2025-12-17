@@ -25,7 +25,7 @@ public class CorsConfig {
         config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
 
         // Headers autorisés (Auth, Content-Type...)
-        config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+        config.setAllowedHeaders(Arrays.asList("*"));
 
         // Méthodes HTTP autorisées
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
